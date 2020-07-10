@@ -1,0 +1,13 @@
+.errorMessage {
+    color: red;
+    background: lightgrey;
+    font-size: 20px;
+    border-style: solid;
+}
+
+.message {
+    color: rgb(12, 214, 12);
+    background: lightgrey;
+    font-size: 20px;
+    border-style: solid;
+}
