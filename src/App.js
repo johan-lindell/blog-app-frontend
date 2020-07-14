@@ -91,7 +91,50 @@ const App = () => {
     window.localStorage.removeItem('loggedBlogappUser')
   }
 
+  const addLike = async blog => {
+    //creates a updated blog with one more like
+    const newBlog = {
+      user: blog.user._id,
+      likes: blog.likes + 1,
+      author: blog.author,
+      title: blog.title,
+      url: blog.url
+    }
 
+    //updates the database
+    let response
+    try {
+      response = await blogService.update(blog.id, newBlog)
+    } catch (e){
+      console.log(e.response.data.error)
+    }
+    const updatedBlogs = blogs.map(b => {
+      if (b.id === response.id) {
+        b.likes = response.likes
+      }
+      return b
+    })
+    setBlogs(updatedBlogs)
+  }
+
+  const deleteBlog = async blog => {
+    try {
+      if (window.confirm(`remove blog ${blog.title} by ${blog.author}`)) {
+        //removed blog from database
+        await blogService.remove(blog.id)
+        const updatedBlogs = blogs.map(b => {
+          if (b.id !== blog.id) {
+            return b
+          }
+          return null
+        })
+        setBlogs(updatedBlogs)
+      }
+    } catch (e) {
+      console.log(e.response.data.error)
+    }
+
+  }
 
   return (
     <div>
@@ -109,7 +152,8 @@ const App = () => {
               setNewAuthor={setNewAuthor} setNewTitle={setNewTitle} setNewUrl={setNewUrl} addBlog={addBlog}/>
           </Togglable>
           {blogs.map(blog =>
-            <Blog key={blog.id} blog={blog} user={user}/>
+            <Blog key={blog.id} blog={blog} addLike={addLike} deleteBLog={deleteBlog}
+              userId={JSON.parse(window.localStorage.getItem('loggedBlogappUser')).id}/>
 
           )}
         </div>
