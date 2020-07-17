@@ -122,16 +122,11 @@ const App = () => {
       if (window.confirm(`remove blog ${blog.title} by ${blog.author}`)) {
         //removed blog from database
         await blogService.remove(blog.id)
-        const updatedBlogs = blogs.map(b => {
-          if (b.id !== blog.id) {
-            return b
-          }
-          return null
-        })
+        const updatedBlogs = blogs.filter(b => b.id !== blog.id)
         setBlogs(updatedBlogs)
       }
     } catch (e) {
-      console.log(e.response.data.error)
+      console.log(e)
     }
 
   }
@@ -152,8 +147,8 @@ const App = () => {
               setNewAuthor={setNewAuthor} setNewTitle={setNewTitle} setNewUrl={setNewUrl} addBlog={addBlog}/>
           </Togglable>
           {blogs.map(blog =>
-            <Blog key={blog.id} blog={blog} addLike={addLike} deleteBLog={deleteBlog}
-              userId={JSON.parse(window.localStorage.getItem('loggedBlogappUser')).id}/>
+            <Blog key={blog.id} blog={blog} addLike={addLike} deleteBlog={deleteBlog}
+              user={JSON.parse(window.localStorage.getItem('loggedBlogappUser'))}/>
 
           )}
         </div>

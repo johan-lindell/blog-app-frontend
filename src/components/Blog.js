@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const Blog = ({ blog, addLike, deleteBlog, userId }) => {
+const Blog = ({ blog, addLike, deleteBlog, user }) => {
   const [visible, setVisible] = useState(false)
   const [buttonLabel, setButtonLabel] = useState('view')
 
@@ -9,7 +9,7 @@ const Blog = ({ blog, addLike, deleteBlog, userId }) => {
 
   //checks if the blog is made by the logged in user
   const sameAuthor = () => {
-    if (userId === blog.user.id) {
+    if (user.id === blog.user.id) {
       return { display: '' }
     } else {
       return { display: 'none' }
@@ -36,7 +36,7 @@ const Blog = ({ blog, addLike, deleteBlog, userId }) => {
       </div>
       <div style={showWhenVisible} className='extraInfo'>
         {blog.url} <br />
-        Likes: {blog.likes} <button onClick={() => addLike(blog)}>like</button><br />
+        Likes: <span id='blogLikes'>{blog.likes}</span> <button id='like-button' onClick={() => addLike(blog)}>like</button><br />
         {blog.user.name}
         <div style={sameAuthor()}>
           <button onClick={() => deleteBlog(blog)}>remove</button>
