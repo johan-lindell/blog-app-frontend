@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
@@ -6,9 +7,9 @@ import Notificaiton from './components/Notification'
 import Togglable from './components/Togglable'
 import LoginForm from './components/LoginForm'
 import AddBlogForm from './components/AddBlogForm'
+import { initializeBlogs, createBlog, deleteBlog, likeBlog } from './reducers/blogReducer'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
   const [newTitle, setNewTitle] = useState('')
   const [newAuthor, setNewAuthor] = useState('')
   const [newUrl, setNewUrl] = useState('')
@@ -17,13 +18,22 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
+  const dispatch = useDispatch()
+
+  const blogs = useSelector(state => state.blogs)
 
 
+  //OLD WAY OF INITIALIZING NOTES
+  //useEffect(() => {
+  //blogService.getAll().then(blogs =>
+  //setBlogs( blogs.sort((a, b) => b.likes - a.likes) )
+  //)
+  //}, [])
+
+  //initializing notes with redux
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs( blogs.sort((a, b) => b.likes - a.likes) )
-    )
-  }, [])
+    dispatch(initializeBlogs())
+  },[dispatch])
 
   useEffect(() => {
     //getting browsers local storage
@@ -43,22 +53,12 @@ const App = () => {
       author: newAuthor,
       url: newUrl
     }
-    //posts object to backend
-    blogService
-      .create(blogObject)
-      .then(returnedBlog => {
-        setBlogs(blogs.concat(returnedBlog))
 
-        setMessage(`a new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
-        setTimeout(() => {
-          setMessage(null)
-        }, 5000)
+    dispatch(createBlog(blogObject))
 
-        setNewTitle('')
-        setNewAuthor('')
-        setNewUrl('')
-
-      })
+    setNewTitle('')
+    setNewAuthor('')
+    setNewUrl('')
   }
 
   const handleLogin = async (event) => {
@@ -91,44 +91,12 @@ const App = () => {
     window.localStorage.removeItem('loggedBlogappUser')
   }
 
-  const addLike = async blog => {
-    //creates a updated blog with one more like
-    const newBlog = {
-      user: blog.user._id,
-      likes: blog.likes + 1,
-      author: blog.author,
-      title: blog.title,
-      url: blog.url
-    }
-
-    //updates the database
-    let response
-    try {
-      response = await blogService.update(blog.id, newBlog)
-    } catch (e){
-      console.log(e.response.data.error)
-    }
-    const updatedBlogs = blogs.map(b => {
-      if (b.id === response.id) {
-        b.likes = response.likes
-      }
-      return b
-    })
-    setBlogs(updatedBlogs)
+  const handleLike = blog => {
+    dispatch(likeBlog(blog))
   }
 
-  const deleteBlog = async blog => {
-    try {
-      if (window.confirm(`remove blog ${blog.title} by ${blog.author}`)) {
-        //removed blog from database
-        await blogService.remove(blog.id)
-        const updatedBlogs = blogs.filter(b => b.id !== blog.id)
-        setBlogs(updatedBlogs)
-      }
-    } catch (e) {
-      console.log(e)
-    }
-
+  const handleDelete = blog => {
+    dispatch(deleteBlog(blog))
   }
 
   return (
@@ -147,7 +115,7 @@ const App = () => {
               setNewAuthor={setNewAuthor} setNewTitle={setNewTitle} setNewUrl={setNewUrl} addBlog={addBlog}/>
           </Togglable>
           {blogs.map(blog =>
-            <Blog key={blog.id} blog={blog} addLike={addLike} deleteBlog={deleteBlog}
+            <Blog key={blog.id} blog={blog} addLike={handleLike} deleteBlog={handleDelete}
               user={JSON.parse(window.localStorage.getItem('loggedBlogappUser'))}/>
 
           )}

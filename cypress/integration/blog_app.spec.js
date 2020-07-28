@@ -79,7 +79,7 @@ describe('blog app', function() {
     })
   })
 
-  describe.only('when multiple blogs are added', function() {
+  describe('when multiple blogs are added', function() {
     beforeEach(function() {
       cy.login({ username: 'johanlindell', password: 'salasana' })
       cy.addBlog({

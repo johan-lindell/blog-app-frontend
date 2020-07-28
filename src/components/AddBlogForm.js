@@ -8,7 +8,6 @@ const AddBlogForm = ({
   newUrl,
   setNewUrl
 }) => {
-
   return (
     <div>
       <h2>create new</h2>
