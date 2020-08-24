@@ -1,28 +1,46 @@
 import React from 'react'
-const AddBlogForm = ({
-  addBlog,
-  newTitle,
-  setNewTitle,
-  newAuthor,
-  setNewAuthor,
-  newUrl,
-  setNewUrl
-}) => {
+import { createBlog } from '../reducers/blogReducer'
+import { useDispatch } from 'react-redux'
+import { useField } from '../hooks'
+import { setNotification } from '../reducers/notificationReducer'
+
+const AddBlogForm = () => {
+  const dispatch = useDispatch()
+
+  const title = useField('text')
+  const author = useField('text')
+  const url = useField('text')
+
+  const addBlog = (event) => {
+    event.preventDefault()
+    //creates blog object
+    const blogObject = {
+      title: title.value,
+      author: author.value,
+      url: url.value
+    }
+    dispatch(createBlog(blogObject))
+    dispatch(setNotification(`Blog created: ${blogObject.title} by ${blogObject.author}`,'notification', 5000))
+
+    title.reset()
+    author.reset()
+    url.reset()
+  }
   return (
     <div>
       <h2>create new</h2>
       <form onSubmit={addBlog}>
         <div>
               title:
-          <input type='text' value={newTitle} name='Title' onChange={({ target }) => setNewTitle(target.value)}/>
+          <input { ...title } reset={null}/>
         </div>
         <div>
               author:
-          <input type='text' value={newAuthor} name='Author' onChange={({ target }) => setNewAuthor(target.value)}/>
+          <input { ...author } reset={null}/>
         </div>
         <div>
               url:
-          <input type='text' value={newUrl} name='Url' onChange={({ target }) => setNewUrl(target.value)}/>
+          <input { ...url } reset={null}/>
         </div>
         <button id='submit-blog-button' type='submit'>create</button>
       </form>

@@ -1,128 +1,93 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import Blog from './components/Blog'
-import blogService from './services/blogs'
-import loginService from './services/login'
 import Notificaiton from './components/Notification'
-import Togglable from './components/Togglable'
 import LoginForm from './components/LoginForm'
-import AddBlogForm from './components/AddBlogForm'
-import { initializeBlogs, createBlog, deleteBlog, likeBlog } from './reducers/blogReducer'
+import BlogList from './components/BlogList'
+import Users from './components/Users'
+import User from './components/User'
+import BlogView from './components/BlogView'
+import { initializeBlogs } from './reducers/blogReducer'
+import { setNotification } from './reducers/notificationReducer'
+import { login, logout, getUser } from './reducers/loginReducer'
+import { getUsers } from './reducers/userReducer'
+import { useField } from './hooks'
+import { BrowserRouter as Router,
+  Switch, Route, Link
+} from 'react-router-dom'
+import { Container, AppBar, Toolbar, Button, Typography } from '@material-ui/core'
 
 const App = () => {
-  const [newTitle, setNewTitle] = useState('')
-  const [newAuthor, setNewAuthor] = useState('')
-  const [newUrl, setNewUrl] = useState('')
-  const [message, setMessage] = useState(null)
-  const [errorMessage, setErrorMessage] = useState(null)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
+  const username = useField('text')
+  const password = useField('password')
   const dispatch = useDispatch()
 
+  const user = useSelector(state => state.login)
+  const users = useSelector(state => state.users)
   const blogs = useSelector(state => state.blogs)
-
-
-  //OLD WAY OF INITIALIZING NOTES
-  //useEffect(() => {
-  //blogService.getAll().then(blogs =>
-  //setBlogs( blogs.sort((a, b) => b.likes - a.likes) )
-  //)
-  //}, [])
-
   //initializing notes with redux
   useEffect(() => {
     dispatch(initializeBlogs())
+    dispatch(getUser())
+    dispatch(getUsers())
   },[dispatch])
 
-  useEffect(() => {
-    //getting browsers local storage
-    const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON)
-      setUser(user)
-      blogService.setToken(user.token)
-    }
-  }, [])
-
-  const addBlog = (event) => {
-    event.preventDefault()
-    //creates blog object
-    const blogObject = {
-      title: newTitle,
-      author: newAuthor,
-      url: newUrl
-    }
-
-    dispatch(createBlog(blogObject))
-
-    setNewTitle('')
-    setNewAuthor('')
-    setNewUrl('')
-  }
-
-  const handleLogin = async (event) => {
+  const handleLogin = (event) => {
     event.preventDefault()
     try {
-      const user = await loginService.login({
-        username, password
-      })
-
-      //saving usert to browser's local storage
-      window.localStorage.setItem(
-        'loggedBlogappUser', JSON.stringify(user)
-      )
-
-      blogService.setToken(user.token)
-      setUser(user)
-      setUsername('')
-      setPassword('')
+      dispatch(login(username.value, password.value))
+      username.reset()
+      password.reset()
     } catch (exception) {
-      setErrorMessage('wrong username or password')
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
+      dispatch(setNotification('wrong username or password', 'error', 5000))
     }
   }
 
   const handleLogout = (event) => {
     event.preventDefault()
-    setUser(null)
-    window.localStorage.removeItem('loggedBlogappUser')
-  }
-
-  const handleLike = blog => {
-    dispatch(likeBlog(blog))
-  }
-
-  const handleDelete = blog => {
-    dispatch(deleteBlog(blog))
+    dispatch(logout())
   }
 
   return (
-    <div>
-      {user === null
-        ? <LoginForm password={password} setPassword={setPassword} username={username} setUsername={setUsername}
-          message={message} errorMessage={errorMessage} handleLogin={handleLogin}/>
-        : <div>
-          <h2>blogs</h2>
-          <Notificaiton message={message} errorMessage={errorMessage} />
-          <p>{user.name} logged in
-            <button onClick={handleLogout}>Logout</button>
-          </p>
-          <Togglable buttonLabel="new blog">
-            <AddBlogForm newUrl={newUrl} newTitle={newTitle} newAuthor={newAuthor}
-              setNewAuthor={setNewAuthor} setNewTitle={setNewTitle} setNewUrl={setNewUrl} addBlog={addBlog}/>
-          </Togglable>
-          {blogs.map(blog =>
-            <Blog key={blog.id} blog={blog} addLike={handleLike} deleteBlog={handleDelete}
-              user={JSON.parse(window.localStorage.getItem('loggedBlogappUser'))}/>
-
-          )}
-        </div>
-      }
-    </div>
-
+    <Container>
+      <Router>
+        <Notificaiton />
+        {user === null
+          ? <LoginForm password={password} username={username}
+            handleLogin={handleLogin}/>
+          :
+          <div>
+            <AppBar position='static'>
+              <Toolbar>
+                <Button color="inherit" component={Link} to="/">
+                  blogs
+                </Button>
+                <Button color="inherit" component={Link} to="/users">
+                  users
+                </Button>
+                <Button color='inherit' onClick={handleLogout}>
+                  logout
+                </Button>
+              </Toolbar>
+            </AppBar>
+            <Typography variant='h2'>Blog App</Typography>
+            <br />
+            <Switch>
+              <Route path='/users/:id'>
+                <User users={users} />
+              </Route>
+              <Route path='/users'>
+                <Users />
+              </Route>
+              <Route path='/blogs/:id'>
+                <BlogView blogs={blogs} />
+              </Route>
+              <Route path='/'>
+                <BlogList />
+              </Route>
+            </Switch>
+          </div>}
+      </Router>
+    </Container>
   )
 }
 

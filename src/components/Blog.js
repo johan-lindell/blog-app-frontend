@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
-
-const Blog = ({ blog, addLike, deleteBlog, user }) => {
+import { useDispatch } from 'react-redux'
+import { deleteBlog, likeBlog } from '../reducers/blogReducer'
+const Blog = ({ blog, user }) => {
+  const dispatch = useDispatch()
   const [visible, setVisible] = useState(false)
   const [buttonLabel, setButtonLabel] = useState('view')
 
@@ -36,10 +38,10 @@ const Blog = ({ blog, addLike, deleteBlog, user }) => {
       </div>
       <div style={showWhenVisible} className='extraInfo'>
         {blog.url} <br />
-        Likes: <span id='blogLikes'>{blog.likes}</span> <button id='like-button' onClick={() => addLike(blog)}>like</button><br />
+        Likes: <span id='blogLikes'>{blog.likes}</span> <button id='like-button' onClick={() => dispatch(likeBlog(blog))}>like</button><br />
         {blog.user.name}
         <div style={sameAuthor()}>
-          <button onClick={() => deleteBlog(blog)}>remove</button>
+          <button onClick={() => dispatch(deleteBlog(blog))}>remove</button>
         </div>
       </div>
     </div>
